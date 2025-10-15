@@ -1,46 +1,25 @@
-'use client';
+import {Navigation} from "@/components/LandingPageComponents/Navigation";
+import { Hero } from "@/components/LandingPageComponents/Hero";
+import { Features } from "@/components/LandingPageComponents/Features";
+import { DemoSection } from "@/components/LandingPageComponents/DemoSection";
+import { StatsSection } from "@/components/LandingPageComponents/StatsSection";
+import { Testimonials } from "@/components/LandingPageComponents/Testimonials";
+import { CTASection } from "@/components/LandingPageComponents/CTASection";
+import { Footer } from "@/components/LandingPageComponents/Footer";
 
-import { motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import Hero from '../components/Hero';
-import InputForm from '../components/InputForm';
-import Features from '../components/Features';
-import Testimonials from '../components/Testimonials';
-import Pricing from '../components/Pricing';
-import FAQ from '../components/FAQ';
-import Footer from '../components/Footer';
+
 
 export default function Home() {
-  const shouldReduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen bg-gray-950">
+      <Navigation />
       <Hero />
-      {mounted && (
-        <motion.section
-          initial="hidden"
-          animate="visible"
-          variants={!shouldReduceMotion ? variants : {}}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <InputForm />
-        </motion.section>
-      )}
       <Features />
+      <DemoSection />
+      <StatsSection />
       <Testimonials />
-      <Pricing />
-      <FAQ />
+      <CTASection />
       <Footer />
-    </main>
+    </div>
   );
 }
