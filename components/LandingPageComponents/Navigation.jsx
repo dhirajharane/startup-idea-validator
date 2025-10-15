@@ -4,6 +4,7 @@ import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { Button } from "../ui/button";
 import { Logo } from "./Logo";
 import { Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const navLinks = [
   { label: "Home", href: "#home" },
@@ -13,6 +14,7 @@ const navLinks = [
 ];
 
 export function Navigation() {
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
@@ -73,7 +75,7 @@ export function Navigation() {
             <div className="hidden md:block">
               <Button
                 size="sm"
-                onClick={() => scrollToSection("#demo")}
+                onClick={() => router.push('/login')}
                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full px-6 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300"
               >
                 Get Started
@@ -112,7 +114,7 @@ export function Navigation() {
           ))}
           <Button
             size="sm"
-            onClick={() => scrollToSection("#demo")}
+            onClick={() => router.push('/login')}
             className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full"
           >
             Get Started
