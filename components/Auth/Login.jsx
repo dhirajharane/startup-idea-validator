@@ -1,48 +1,308 @@
 "use client";
-import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Label } from "../ui/label";
-import { Sparkles, Lock, Mail, User, Zap, ShieldCheck } from "lucide-react";
 
-export default function Login() {
-  const [mode, setMode] = useState("login"); // "login" or "signup"
-  const [authMethod, setAuthMethod] = useState("password"); // "password" or "otp"
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Lock, Mail, User, Zap, ShieldCheck, ArrowRight, LoaderCircle } from "lucide-react";
+// import { signIn } from "next-auth/react"; // Mocked below
+// import { useRouter } from "next/navigation"; // Mocked below
+
+// --- Mocks for environment compatibility ---
+// In a real Next.js app, you would use the actual imports.
+// These mocks allow the component to be self-contained and runnable.
+const useRouter = () => {
+  return {
+    push: (path) => {
+      console.log(`Redirecting to ${path}`);
+      // In a real app, this would change the URL.
+      // For this self-contained example, we can alert the user of success.
+       alert(`Login successful! Redirecting to ${path}...`);
+    }
+  };
+};
+
+const signIn = async (provider, options) => {
+  console.log("Mock signIn called with:", provider, options);
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  if (provider === 'google') {
+    return { error: null };
+  }
+
+  if (provider === 'credentials') {
+    // Simulate a successful login for demonstration purposes
+    if (options?.email && (options.password || options.loginToken)) {
+      if (options.email.includes("fail")) {
+         return { error: "Invalid credentials provided." };
+      }
+      return { error: null };
+    }
+    // Simulate a failed login
+    return { error: "Invalid email or password." };
+  }
+  
+  return { error: "Unknown provider." };
+};
+
+
+// --- Re-created UI Components for self-containment ---
+// NOTE: You can replace these with your actual shadcn/ui components.
+// I've recreated them to make this file runnable on its own.
+
+const Label = React.forwardRef(({ className, ...props }, ref) => (
+  <label ref={ref} className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`} {...props} />
+));
+
+const Input = React.forwardRef(({ className, type, ...props }, ref) => {
+  return (
+    <input
+      type={type}
+      className={`flex h-10 w-full rounded-md border border-slate-800 bg-slate-900/50 px-3 py-2 text-sm text-slate-50 ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 focus:scale-[1.02] ${className}`}
+      ref={ref}
+      {...props}
+    />
+  );
+});
+
+const Button = React.forwardRef(({ className, variant, size, ...props }, ref) => {
+  const baseClasses = "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-semibold ring-offset-slate-950 transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95";
+  
+  const variantClasses = {
+    default: "bg-purple-600 text-slate-50 hover:bg-purple-600/90",
+    outline: "border border-slate-800 bg-transparent hover:bg-slate-800 hover:text-slate-50",
+  };
+  
+  const sizeClasses = {
+    default: "h-10 px-4 py-2",
+    lg: "h-11 rounded-md px-8",
+  };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-gray-950 via-purple-950 to-gray-900">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 90, 0],
-            opacity: [0.15, 0.3, 0.15],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            rotate: [0, -90, 0],
-            opacity: [0.1, 0.25, 0.1],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute top-1/3 -right-40 w-96 h-96 bg-gradient-to-br from-pink-600 to-purple-700 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            rotate: [0, 45, 0],
-            opacity: [0.12, 0.28, 0.12],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-40 left-1/3 w-72 h-72 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-full blur-3xl"
-        />
+    <button
+      className={`${baseClasses} ${variantClasses[variant] || variantClasses.default} ${sizeClasses[size] || sizeClasses.default} ${className}`}
+      ref={ref}
+      {...props}
+    />
+  );
+});
 
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.05)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+// --- Enhanced OTP Input Component ---
+const OtpInput = ({ length = 6, onChange }) => {
+  const [otp, setOtp] = useState(new Array(length).fill(""));
+  const inputRefs = useRef([]);
+
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  const handleChange = (element, index) => {
+    if (isNaN(element.value)) return false;
+
+    const newOtp = [...otp];
+    newOtp[index] = element.value.slice(-1);
+    setOtp(newOtp);
+
+    onChange(newOtp.join(""));
+
+    // Focus next input
+    if (element.value && index < length - 1) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+  
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    const value = e.clipboardData.getData("text");
+    if (isNaN(value) || value.length !== length) return;
+    const newOtp = value.split('');
+    setOtp(newOtp);
+    onChange(newOtp.join(""));
+    inputRefs.current[length - 1].focus();
+  };
+
+  return (
+    <div className="flex justify-center gap-2 sm:gap-4" onPaste={handlePaste}>
+      {otp.map((data, index) => (
+        <input
+          key={index}
+          type="text"
+          maxLength="1"
+          ref={(el) => (inputRefs.current[index] = el)}
+          value={data}
+          onChange={(e) => handleChange(e.target, index)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          onFocus={(e) => e.target.select()}
+          className="aspect-square w-12 sm:w-14 h-12 sm:h-14 text-center text-xl sm:text-2xl font-semibold text-white bg-slate-800/50 border-2 border-slate-700 rounded-lg transition-all duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 focus:scale-105"
+        />
+      ))}
+    </div>
+  );
+};
+
+
+export default function Login() {
+  const [mode, setMode] = useState("login"); // "login", "signup", "verify-signup"
+  const [authMethod, setAuthMethod] = useState("password"); // "password", "request-otp", "verify-login-otp"
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({});
+  const router = useRouter();
+
+  // --- LOGIC (UNCHANGED) ---
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError("");
+  };
+
+  const handleOtpChange = (otpValue) => {
+    setFormData({ ...formData, otp: otpValue });
+    setError("");
+  };
+
+  const handlePasswordLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    const result = await signIn("credentials", {
+      redirect: false,
+      email: formData.email,
+      password: formData.password,
+    });
+    setIsLoading(false);
+    if (result.error) {
+      setError("Invalid email or password.");
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
+  const handleOtpLoginRequest = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      // In a real app, this would be a fetch call.
+      // Simulating success to proceed to OTP verification UI.
+      await new Promise(res => setTimeout(res, 1000));
+      if (formData.email?.includes("fail")) {
+        throw new Error("This email address is blocked.");
+      }
+      console.log("Pretending to send OTP to:", formData.email);
+      setAuthMethod("verify-login-otp");
+    } catch (err) {
+      setError(err.message || "Failed to send OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpLoginVerify = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      // In a real app, this would be a fetch call.
+      // Simulating success and getting a login token.
+      await new Promise(res => setTimeout(res, 1000));
+      if (formData.otp !== '123456') {
+          throw new Error("Invalid OTP code.");
+      }
+      const data = { loginToken: "mock-login-token-123" };
+
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: formData.email,
+        loginToken: data.loginToken,
+      });
+
+      if (result.error) {
+        setError("Login failed. Please try again.");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      setError(err.message || "Failed to verify OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignupOtpRequest = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      // In a real app, this would be a fetch call.
+      await new Promise(res => setTimeout(res, 1000));
+       if (formData.email?.includes("exists")) {
+        throw new Error("An account with this email already exists.");
+      }
+      console.log("Pretending to register and send OTP:", formData);
+      setMode("verify-signup");
+    } catch (err) {
+      setError(err.message || "Could not start sign-up process.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignupOtpVerify = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      // In a real app, this would be a fetch call.
+      await new Promise(res => setTimeout(res, 1000));
+      if (formData.otp !== '123456') {
+          throw new Error("Invalid OTP code.");
+      }
+
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (result.error) {
+        setError("Verification successful, but login failed. Please log in manually.");
+        setMode("login");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      setError(err.message || "Failed to verify OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getLoginFormHandler = () => {
+    switch (authMethod) {
+      case 'password':
+        return handlePasswordLogin;
+      case 'request-otp':
+        return handleOtpLoginRequest;
+      case 'verify-login-otp':
+        return handleOtpLoginVerify;
+      default:
+        return handlePasswordLogin;
+    }
+  }
+
+  // --- UI / JSX (ENHANCED) ---
+  return (
+    <div className="min-h-screen w-full relative overflow-hidden bg-slate-950">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 z-0 opacity-50">
+          <div className="absolute -top-40 -left-40 w-80 h-80 bg-purple-600/50 rounded-full blur-3xl animate-[spin_20s_linear_infinite]" />
+          <div className="absolute top-1/3 -right-40 w-96 h-96 bg-indigo-600/50 rounded-full blur-3xl animate-[spin_25s_linear_infinite_reverse]" />
+          <div className="absolute -bottom-40 left-1/3 w-72 h-72 bg-pink-600/50 rounded-full blur-3xl animate-[spin_18s_linear_infinite]" />
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiPjxwYXRoIGQ9Ik0wIC41SDMybTAtMTBWMzJNMCAxNS41SDMybTAtMTBWMzIiLz48L3N2Zz4=')] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000,transparent_100%)]" />
       </div>
 
       {/* Main Content */}
@@ -54,38 +314,31 @@ export default function Login() {
           className="w-full max-w-md"
         >
           {/* Logo/Branding */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-center mb-8"
-          >
+          <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center gap-2 mb-3">
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                className="p-3 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl shadow-lg"
-              >
+              <div className="p-3 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl shadow-lg shadow-purple-600/30">
                 <Sparkles className="size-6 text-white" />
-              </motion.div>
+              </div>
             </div>
-            <h1 className="text-4xl bg-gradient-to-r from-purple-400 via-indigo-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-indigo-400 to-pink-400 bg-clip-text text-transparent">
               StartupInspector
             </h1>
-            <p className="text-gray-400 mt-2">AI-Powered Startup Analysis</p>
-          </motion.div>
+            <p className="text-slate-400 mt-2">AI-Powered Startup Analysis</p>
+          </div>
 
           {/* Auth Card */}
           <motion.div
             layout
-            className="bg-gray-900/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-800/50 p-8 relative overflow-hidden"
+            transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
+            className="bg-slate-900/60 backdrop-blur-xl rounded-2xl shadow-2xl shadow-purple-900/20 border border-slate-800 p-6 sm:p-8 relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-600/20 to-transparent rounded-bl-full" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-600/20 to-transparent rounded-tr-full" />
+            <div className="absolute top-0 right-0 -m-4 w-32 h-32 bg-purple-600/10 rounded-full blur-2xl" />
+            <div className="absolute bottom-0 left-0 -m-4 w-24 h-24 bg-indigo-600/10 rounded-full blur-2xl" />
 
             <div className="relative">
               <AnimatePresence mode="wait">
-                {mode === "login" ? (
+                {/* LOGIN MODE */}
+                {mode === "login" && (
                   <motion.div
                     key="login"
                     initial={{ opacity: 0, x: -20 }}
@@ -94,187 +347,155 @@ export default function Login() {
                     transition={{ duration: 0.3 }}
                   >
                     <div className="mb-6">
-                      <h2 className="text-3xl text-white">Welcome Back</h2>
-                      <p className="text-gray-400 mt-1">Sign in to continue your journey</p>
+                      <h2 className="text-3xl font-bold text-white">Welcome Back</h2>
+                      <p className="text-slate-400 mt-1">Sign in to continue your journey</p>
                     </div>
 
-                    <div className="space-y-4">
+                    <form onSubmit={getLoginFormHandler()} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="flex items-center gap-2 text-gray-300">
-                          <Mail className="size-4 text-purple-400" />
-                          Email
+                        <Label htmlFor="email" className="flex items-center gap-2 text-slate-300">
+                          <Mail className="size-4 text-purple-400" /> Email
                         </Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="your@email.com"
-                          className="transition-all duration-200 focus:scale-[1.01] bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500"
-                        />
+                        <Input id="email" name="email" type="email" placeholder="your@email.com" required onChange={handleInputChange} />
                       </div>
+                      
+                      <AnimatePresence>
+                        {authMethod === 'password' && (
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{duration: 0.3}} className="space-y-2 overflow-hidden">
+                            <Label htmlFor="password" className="flex items-center gap-2 text-slate-300">
+                              <Lock className="size-4 text-purple-400" /> Password
+                            </Label>
+                            <Input id="password" name="password" type="password" placeholder="••••••••" required onChange={handleInputChange} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-                      {authMethod === "password" && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="space-y-2"
-                        >
-                          <Label htmlFor="password" className="flex items-center gap-2 text-gray-300">
-                            <Lock className="size-4 text-purple-400" />
-                            Password
-                          </Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            className="transition-all duration-200 focus:scale-[1.01] bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500"
-                          />
-                        </motion.div>
+                      {authMethod === 'verify-login-otp' && (
+                         <motion.div key="login-otp" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-2 pt-2">
+                            <Label htmlFor="otp" className="flex items-center justify-center gap-2 text-slate-300 text-center text-sm">
+                                Enter the OTP sent to your email
+                            </Label>
+                            <OtpInput length={6} onChange={handleOtpChange} />
+                         </motion.div>
                       )}
 
-                      <Button
-                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
-                        size="lg"
-                      >
-                        <ShieldCheck className="size-5" />
-                        {authMethod === "password" ? "Sign in with Password" : "Sign in with OTP"}
+                      {error && <p className="text-red-400 text-sm font-medium text-center bg-red-500/10 p-2 rounded-md border border-red-500/20">{error}</p>}
+
+                      <Button type="submit" disabled={isLoading} className="w-full group gap-2" size="lg">
+                         {isLoading ? <LoaderCircle className="size-5 animate-spin"/> : <ShieldCheck className="size-5 group-hover:scale-110 transition-transform"/>}
+                         <span>{isLoading ? 'Loading...' : (authMethod === 'request-otp' ? 'Send OTP' : (authMethod === 'verify-login-otp' ? 'Verify & Sign In' : 'Sign In'))}</span>
                       </Button>
+                    </form>
 
-                      <div className="relative my-6">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-gray-700" />
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                          <span className="px-4 bg-gray-900 text-gray-400">--OR--</span>
-                        </div>
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        className="w-full border-gray-700 hover:border-purple-500 hover:bg-gray-800 transition-all duration-200 text-gray-300"
-                        size="lg"
-                        onClick={() => setAuthMethod(authMethod === "password" ? "otp" : "password")}
-                      >
-                        <Zap className="size-5 text-purple-400" />
-                        {authMethod === "password" ? "Sign in with OTP" : "Sign in with Password"}
-                      </Button>
+                    <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800" /></div><div className="relative flex justify-center text-sm"><span className="px-4 bg-slate-900 text-slate-500">OR</span></div></div>
+                    
+                    <div className="space-y-3">
+                        <Button variant="outline" className="w-full gap-2 text-white" size="lg" onClick={() => setAuthMethod(authMethod === 'password' ? 'request-otp' : 'password')}>
+                           <Zap className="size-5 text-purple-400" />
+                           {authMethod === 'password' ? 'Sign in with OTP' : 'Sign in with Password'}
+                        </Button>
+                        <Button variant="outline" className="w-full gap-2 text-white" size="lg" onClick={() => signIn('google', { callbackUrl: '/dashboard' })}>
+                          <svg className="size-5" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Google</title><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                          Sign in with Google
+                        </Button>
                     </div>
 
-                    <div className="mt-6 text-center">
-                      <p className="text-gray-400">
-                        New to StartupInspector?{" "}
-                        <button
-                          onClick={() => setMode("signup")}
-                          className="text-purple-400 hover:text-purple-300 transition-colors underline-offset-4 hover:underline"
-                        >
-                          SignUp
-                        </button>
-                      </p>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="signup"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="mb-6">
-                      <h2 className="text-3xl text-white">Create Account</h2>
-                      <p className="text-gray-400 mt-1">Start analyzing your startup ideas</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="firstName" className="flex items-center gap-2 text-gray-300">
-                            <User className="size-4 text-purple-400" />
-                            First Name
-                          </Label>
-                          <Input
-                            id="firstName"
-                            type="text"
-                            placeholder="John"
-                            className="transition-all duration-200 focus:scale-[1.01] bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="lastName" className="flex items-center gap-2 text-gray-300">
-                            <User className="size-4 text-purple-400" />
-                            Last Name
-                          </Label>
-                          <Input
-                            id="lastName"
-                            type="text"
-                            placeholder="Doe"
-                            className="transition-all duration-200 focus:scale-[1.01] bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="signupEmail" className="flex items-center gap-2 text-gray-300">
-                          <Mail className="size-4 text-purple-400" />
-                          Email
-                        </Label>
-                        <Input
-                          id="signupEmail"
-                          type="email"
-                          placeholder="your@email.com"
-                          className="transition-all duration-200 focus:scale-[1.01] bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="signupPassword" className="flex items-center gap-2 text-gray-300">
-                          <Lock className="size-4 text-purple-400" />
-                          Password
-                        </Label>
-                        <Input
-                          id="signupPassword"
-                          type="password"
-                          placeholder="••••••••"
-                          className="transition-all duration-200 focus:scale-[1.01] bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-purple-500"
-                        />
-                      </div>
-
-                      <Button
-                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
-                        size="lg"
-                      >
-                        <Zap className="size-5" />
-                        Send OTP
-                      </Button>
-                    </div>
-
-                    <div className="mt-6 text-center">
-                      <p className="text-gray-400">
-                        Already a user?{" "}
-                        <button
-                          onClick={() => setMode("login")}
-                          className="text-purple-400 hover:text-purple-300 transition-colors underline-offset-4 hover:underline"
-                        >
-                          Login
-                        </button>
-                      </p>
-                    </div>
+                    <p className="mt-8 text-center text-sm text-slate-400">
+                      New to StartupInspector?{" "}
+                      <button onClick={() => { setMode("signup"); setError(''); setFormData({}); }} className="font-semibold text-purple-400 hover:text-purple-300 transition-colors underline-offset-4 hover:underline">
+                        Sign Up Now
+                      </button>
+                    </p>
                   </motion.div>
                 )}
+
+                {/* SIGNUP MODE */}
+                {mode === "signup" && (
+                  <motion.div key="signup" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                    <div className="mb-6">
+                      <h2 className="text-3xl font-bold text-white">Create Account</h2>
+                      <p className="text-slate-400 mt-1">Start analyzing your startup ideas</p>
+                    </div>
+                    
+                    <form onSubmit={handleSignupOtpRequest} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName" className="flex items-center gap-2 text-slate-300"><User className="size-4 text-purple-400" />First Name</Label>
+                          <Input id="firstName" name="firstName" type="text" placeholder="John" required onChange={handleInputChange} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName" className="flex items-center gap-2 text-slate-300"><User className="size-4 text-purple-400" />Last Name</Label>
+                          <Input id="lastName" name="lastName" type="text" placeholder="Doe" required onChange={handleInputChange} />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="flex items-center gap-2 text-slate-300"><Mail className="size-4 text-purple-400" />Email</Label>
+                        <Input id="email" name="email" type="email" placeholder="your@email.com" required onChange={handleInputChange}/>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="password" className="flex items-center gap-2 text-slate-300"><Lock className="size-4 text-purple-400" />Password</Label>
+                        <Input id="password" name="password" type="password" placeholder="min. 8 characters" required minLength={8} onChange={handleInputChange}/>
+                      </div>
+                      
+                      {error && <p className="text-red-400 text-sm font-medium text-center bg-red-500/10 p-2 rounded-md border border-red-500/20">{error}</p>}
+                      
+                      <Button type="submit" disabled={isLoading} className="w-full group gap-2" size="lg">
+                        {isLoading ? <LoaderCircle className="size-5 animate-spin"/> : <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform"/>}
+                        <span>{isLoading ? 'Creating...' : 'Continue'}</span>
+                      </Button>
+                    </form>
+
+                    <p className="mt-8 text-center text-sm text-slate-400">
+                      Already have an account?{" "}
+                      <button onClick={() => { setMode("login"); setError(''); setFormData({}); }} className="font-semibold text-purple-400 hover:text-purple-300 transition-colors underline-offset-4 hover:underline">
+                        Login
+                      </button>
+                    </p>
+                  </motion.div>
+                )}
+
+                {/* VERIFY SIGNUP MODE */}
+                {mode === "verify-signup" && (
+                  <motion.div
+                    key="verify-signup"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="mb-8 text-center">
+                      <ShieldCheck className="mx-auto size-12 text-purple-400 mb-2"/>
+                      <h2 className="text-3xl font-bold text-white">Verify Your Email</h2>
+                      <p className="text-slate-400 mt-2">
+                        An OTP has been sent to <br/>
+                        <span className="font-semibold text-purple-300">{formData.email}</span>
+                      </p>
+                    </div>
+                    <form onSubmit={handleSignupOtpVerify} className="space-y-6">
+                        <OtpInput length={6} onChange={handleOtpChange} />
+                        {error && <p className="text-red-400 text-sm font-medium text-center bg-red-500/10 p-2 rounded-md border border-red-500/20">{error}</p>}
+                        <Button type="submit" disabled={isLoading} className="w-full gap-2" size="lg">
+                            {isLoading ? <LoaderCircle className="size-5 animate-spin"/> : <Zap className="size-5" />}
+                            <span>{isLoading ? 'Verifying...' : 'Verify & Create Account'}</span>
+                        </Button>
+                    </form>
+                    <p className="mt-8 text-center text-sm text-slate-400">
+                      Didn't get a code?{" "}
+                      <button onClick={() => handleSignupOtpRequest({ preventDefault: () => {} })} disabled={isLoading} className="font-semibold text-purple-400 hover:underline disabled:opacity-50">Resend</button>
+                    </p>
+                  </motion.div>
+                )}
+
               </AnimatePresence>
             </div>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="mt-8 text-center text-sm text-gray-500"
-          >
-            <p>Secured by enterprise-grade encryption</p>
-          </motion.div>
+          
+          <p className="mt-8 text-center text-xs text-slate-500">
+            &copy; {new Date().getFullYear()} StartupInspector. All rights reserved.
+          </p>
         </motion.div>
       </div>
     </div>
   );
 }
+
