@@ -2,7 +2,6 @@
 import { motion } from "framer-motion";
 import { DollarSign, CreditCard, TrendingUp, Zap } from "lucide-react";
 
-// Mock descriptions - in production these would come from the API
 const getMonetizationDetails = (title, index) => {
   const details = {
     "Commission-based sales model": {
@@ -31,7 +30,7 @@ const getMonetizationDetails = (title, index) => {
   ];
   
   return details[title] || {
-    description: "A strategic approach to generating revenue for your business.",
+    description: ``,
     icon: defaultIcons[index % defaultIcons.length],
     gradient: defaultGradients[index % defaultGradients.length],
   };
@@ -90,7 +89,7 @@ export function MonetizationStrategies({ monetization }) {
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: index * 0.15 + 0.2 }}
                 >
-                  <span className="text-gray-400" style={{ fontSize: "12px", fontWeight: 600 }}>
+                  <span className="text-gray-400 text-xs font-semibold">
                     #{index + 1}
                   </span>
                 </motion.div>
@@ -98,19 +97,14 @@ export function MonetizationStrategies({ monetization }) {
 
               {/* Content */}
               <div className="relative">
-                <h4 className="text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text transition-all duration-300"
-                  style={{ 
-                    fontWeight: 600,
-                    backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))`,
-                  }}
-                  className={`group-hover:from-green-400 group-hover:to-emerald-400`}
+                {/* FIX 2: Merged the two className props into one and used the dynamic gradient */}
+                <h4
+                  className={`font-semibold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text transition-all duration-300 ${details.gradient}`}
                 >
                   {item}
                 </h4>
                 
-                <p className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300" 
-                  style={{ fontSize: "14px", lineHeight: 1.6 }}
-                >
+                <p className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300 text-sm leading-relaxed">
                   {details.description}
                 </p>
               </div>

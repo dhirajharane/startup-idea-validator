@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import { useState } from "react";
 
-// Mock descriptions - in production these would come from the API
+
 const getInsightDetails = (title) => {
   const details = {
     "Actionable Insight 1": {
@@ -17,7 +17,7 @@ const getInsightDetails = (title) => {
   };
   
   return details[title] || {
-    description: "A strategic action to improve your business performance and achieve better results.",
+    description: "",
     priority: "medium",
   };
 };
@@ -106,7 +106,7 @@ export function ActionableInsights({ actionableInsights }) {
                 <div className="relative flex items-start gap-4">
                   {/* Checkbox */}
                   <motion.div
-                    className={`flex-shrink-0 w-12 h-12 rounded-xl border-2 flex items-center justify-center transition-all duration-300 ${
+                    className={`flex-shrink-0 w-12 h-12 rounded-xl border-2 grid place-items-center transition-all duration-300 ${ // MODIFIED: Changed flex to grid
                       isChecked
                         ? "bg-green-500 border-green-500"
                         : "bg-gray-800/50 border-gray-700 group-hover:border-indigo-500"
@@ -115,6 +115,7 @@ export function ActionableInsights({ actionableInsights }) {
                     whileTap={{ scale: 0.95 }}
                   >
                     <motion.div
+                      className="col-start-1 row-start-1" // MODIFIED: Added grid placement
                       initial={false}
                       animate={{
                         scale: isChecked ? 1 : 0,
@@ -126,7 +127,9 @@ export function ActionableInsights({ actionableInsights }) {
                     </motion.div>
                     
                     {!isChecked && (
-                      <div className="text-gray-500" style={{ fontSize: "20px", fontWeight: 700 }}>
+                      <div 
+                        className="col-start-1 row-start-1 text-gray-500" // MODIFIED: Added grid placement
+                        style={{ fontSize: "20px", fontWeight: 700 }}>
                         {index + 1}
                       </div>
                     )}
