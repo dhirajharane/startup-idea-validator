@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { runIdeaValidatorChains } from "@/lib/chains";
 import { generatePDF } from "@/lib/utils/generatePDF";
 
 const validationSchema = z.object({
-  startupIdea: z
-    .string({ invalid_type_error: "Startup idea must be a string." })
-    .min(10, { message: "Startup idea must be at least 10 characters long." }),
+  htmlContent: z.string().min(1, { message: "HTML content is required." }),
+  cssContent: z.string().min(1, { message: "CSS content is required." }),
 });
 
 export async function POST(req) {
@@ -24,14 +22,9 @@ export async function POST(req) {
       );
     }
 
-    const { startupIdea } = validationResult.data;
-    const report = await runIdeaValidatorChains(startupIdea);
+    const { htmlContent, cssContent } = validationResult.data;
 
-    if (!report) {
-      throw new Error("Failed to generate report data.");
-    }
-
-    const pdfBuffer = await generatePDF(report);
+    const pdfBuffer = await generatePDF(htmlContent, cssContent);
 
     return new NextResponse(pdfBuffer, {
       headers: {
