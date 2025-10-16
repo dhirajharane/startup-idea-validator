@@ -12,10 +12,13 @@ import { CompetitiveLandscape } from "./CompetitiveLandscape";
 import { MarketTrends } from "./MarketTrends";
 import { Button } from "../ui/button";
 import { motion } from "framer-motion";
+import { Toaster, toast } from 'sonner'
+
 
 export function ReportPage({ report, onNavigate }) {
     const [activePage, setActivePage] = useState("report");
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const reportContainerRef = useRef(null);
 
     if (!report) {
@@ -96,12 +99,34 @@ export function ReportPage({ report, onNavigate }) {
         }
     };
 
-    const handleSave = () => {
-        console.log("Saving report:", report.startupIdea);
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const response = await fetch('/api/saved-reports', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reportId: report.id }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Something went wrong.');
+            }
+
+            toast.success("Report saved successfully!");
+
+        } catch (error) {
+            console.error("Failed to save report:", error);
+            toast.error("Failed to save report.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
         <div className="min-h-screen bg-gray-950">
+            <Toaster />
             <Sidebar activePage={activePage} onNavigate={handleNavigate} />
 
             <div className="ml-[72px] transition-all duration-300">
@@ -134,11 +159,12 @@ export function ReportPage({ report, onNavigate }) {
                             </Button>
                             <Button
                                 onClick={handleSave}
+                                disabled={isSaving}
                                 variant="outline"
                                 className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white rounded-xl"
                             >
                                 <Bookmark className="w-4 h-4 mr-2" strokeWidth={2} />
-                                Save Report
+                                {isSaving ? 'Saving...' : 'Save Report'}
                             </Button>
                         </div>
                     </motion.div>

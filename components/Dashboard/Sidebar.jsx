@@ -1,5 +1,5 @@
 "use client";
-import { LayoutDashboard, History, LogOut } from "lucide-react";
+import { LayoutDashboard, History, LogOut, Bookmark } from "lucide-react";
 import { useState } from "react";
 
 export function Sidebar({ activePage, onNavigate }) {
@@ -8,6 +8,7 @@ export function Sidebar({ activePage, onNavigate }) {
   const navItems = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { id: "history", icon: History, label: "Validation History" },
+    { id: "saved-reports", icon: Bookmark, label: "Saved Reports" },
   ];
 
   return (

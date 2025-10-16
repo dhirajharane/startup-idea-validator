@@ -4,23 +4,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 
 export function RecentHistory({ reports = [], isLoading = false, onViewReport }) {
   
-  if (!isLoading && reports.length === 0) {
-    return (
-      <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-2xl p-8">
-        <h3 className="mb-6 text-white">Recent History</h3>
-        
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4">
-            <Lightbulb className="w-8 h-8 text-indigo-400" strokeWidth={1.5} />
-          </div>
-          <p className="text-gray-400 max-w-md" style={{ fontSize: "14px" }}>
-            Your validated ideas will appear here. Let's analyze your first one!
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (isLoading) {
     return (
       <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-2xl p-8">
@@ -50,6 +33,23 @@ export function RecentHistory({ reports = [], isLoading = false, onViewReport })
     );
   }
 
+  if (reports.length === 0) {
+    return (
+      <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-2xl p-8">
+        <h3 className="mb-6 text-white">Recent History</h3>
+        
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4">
+            <Lightbulb className="w-8 h-8 text-indigo-400" strokeWidth={1.5} />
+          </div>
+          <p className="text-gray-400 max-w-md" style={{ fontSize: "14px" }}>
+            Your validated ideas will appear here. Let's analyze your first one!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-2xl p-8">
       <h3 className="mb-6 text-white">Recent History</h3>
@@ -64,7 +64,7 @@ export function RecentHistory({ reports = [], isLoading = false, onViewReport })
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(Array.isArray(reports) ? reports : []).slice(0, 3).map((report) => (
+            {(Array.isArray(reports) ? reports : []).map((report) => (
               <TableRow 
                 key={report.id}
                 className="border-gray-800 hover:bg-gray-800/30 transition-colors group"

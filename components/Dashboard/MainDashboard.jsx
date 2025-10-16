@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Dashboard } from './Dashboard.jsx';
 import { HistoryPage } from './HistoryPage.jsx';
+import { SavedReportsPage } from '../Report/SavedReports.jsx';
 import { LoadingState } from './LoadingState.jsx';
 import { ReportPage } from '../Report/ReportPage.jsx';
 
@@ -56,6 +57,8 @@ export default function MainDashboard({ userDetails, initialReports }) {
             );
         case 'history':
             return <HistoryPage onNavigate={handleNavigate} />;
+        case 'saved-reports':
+            return <SavedReportsPage onNavigate={handleNavigate} />;
         case 'report':
             return <ReportPage report={reportData} onNavigate={handleNavigate} />;
         default:
