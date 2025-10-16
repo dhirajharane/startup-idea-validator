@@ -3,51 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Lock, Mail, User, Zap, ShieldCheck, ArrowRight, LoaderCircle } from "lucide-react";
-// import { signIn } from "next-auth/react"; // Mocked below
-// import { useRouter } from "next/navigation"; // Mocked below
-
-// --- Mocks for environment compatibility ---
-// In a real Next.js app, you would use the actual imports.
-// These mocks allow the component to be self-contained and runnable.
-const useRouter = () => {
-  return {
-    push: (path) => {
-      console.log(`Redirecting to ${path}`);
-      // In a real app, this would change the URL.
-      // For this self-contained example, we can alert the user of success.
-       alert(`Login successful! Redirecting to ${path}...`);
-    }
-  };
-};
-
-const signIn = async (provider, options) => {
-  console.log("Mock signIn called with:", provider, options);
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  if (provider === 'google') {
-    return { error: null };
-  }
-
-  if (provider === 'credentials') {
-    // Simulate a successful login for demonstration purposes
-    if (options?.email && (options.password || options.loginToken)) {
-      if (options.email.includes("fail")) {
-         return { error: "Invalid credentials provided." };
-      }
-      return { error: null };
-    }
-    // Simulate a failed login
-    return { error: "Invalid email or password." };
-  }
-  
-  return { error: "Unknown provider." };
-};
-
-
-// --- Re-created UI Components for self-containment ---
-// NOTE: You can replace these with your actual shadcn/ui components.
-// I've recreated them to make this file runnable on its own.
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const Label = React.forwardRef(({ className, ...props }, ref) => (
   <label ref={ref} className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`} {...props} />
@@ -66,17 +23,14 @@ const Input = React.forwardRef(({ className, type, ...props }, ref) => {
 
 const Button = React.forwardRef(({ className, variant, size, ...props }, ref) => {
   const baseClasses = "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-semibold ring-offset-slate-950 transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95";
-  
   const variantClasses = {
     default: "bg-purple-600 text-slate-50 hover:bg-purple-600/90",
     outline: "border border-slate-800 bg-transparent hover:bg-slate-800 hover:text-slate-50",
   };
-  
   const sizeClasses = {
     default: "h-10 px-4 py-2",
     lg: "h-11 rounded-md px-8",
   };
-
   return (
     <button
       className={`${baseClasses} ${variantClasses[variant] || variantClasses.default} ${sizeClasses[size] || sizeClasses.default} ${className}`}
@@ -86,7 +40,6 @@ const Button = React.forwardRef(({ className, variant, size, ...props }, ref) =>
   );
 });
 
-// --- Enhanced OTP Input Component ---
 const OtpInput = ({ length = 6, onChange }) => {
   const [otp, setOtp] = useState(new Array(length).fill(""));
   const inputRefs = useRef([]);
@@ -97,14 +50,10 @@ const OtpInput = ({ length = 6, onChange }) => {
 
   const handleChange = (element, index) => {
     if (isNaN(element.value)) return false;
-
     const newOtp = [...otp];
     newOtp[index] = element.value.slice(-1);
     setOtp(newOtp);
-
     onChange(newOtp.join(""));
-
-    // Focus next input
     if (element.value && index < length - 1) {
       inputRefs.current[index + 1].focus();
     }
@@ -144,16 +93,20 @@ const OtpInput = ({ length = 6, onChange }) => {
   );
 };
 
-
 export default function Login() {
-  const [mode, setMode] = useState("login"); // "login", "signup", "verify-signup"
-  const [authMethod, setAuthMethod] = useState("password"); // "password", "request-otp", "verify-login-otp"
+  const [mode, setMode] = useState("login");
+  const [authMethod, setAuthMethod] = useState("password");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    otp: "",
+  });
   const router = useRouter();
 
-  // --- LOGIC (UNCHANGED) ---
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
@@ -186,16 +139,18 @@ export default function Login() {
     setIsLoading(true);
     setError("");
     try {
-      // In a real app, this would be a fetch call.
-      // Simulating success to proceed to OTP verification UI.
-      await new Promise(res => setTimeout(res, 1000));
-      if (formData.email?.includes("fail")) {
-        throw new Error("This email address is blocked.");
+      const res = await fetch("/api/request-login-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to send OTP.");
       }
-      console.log("Pretending to send OTP to:", formData.email);
       setAuthMethod("verify-login-otp");
     } catch (err) {
-      setError(err.message || "Failed to send OTP.");
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -206,14 +161,16 @@ export default function Login() {
     setIsLoading(true);
     setError("");
     try {
-      // In a real app, this would be a fetch call.
-      // Simulating success and getting a login token.
-      await new Promise(res => setTimeout(res, 1000));
-      if (formData.otp !== '123456') {
-          throw new Error("Invalid OTP code.");
+      const res = await fetch("/api/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, otp: formData.otp, purpose: 'login' }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to verify OTP.");
       }
-      const data = { loginToken: "mock-login-token-123" };
-
+      
       const result = await signIn("credentials", {
         redirect: false,
         email: formData.email,
@@ -226,7 +183,7 @@ export default function Login() {
         router.push("/dashboard");
       }
     } catch (err) {
-      setError(err.message || "Failed to verify OTP.");
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -237,15 +194,18 @@ export default function Login() {
     setIsLoading(true);
     setError("");
     try {
-      // In a real app, this would be a fetch call.
-      await new Promise(res => setTimeout(res, 1000));
-       if (formData.email?.includes("exists")) {
-        throw new Error("An account with this email already exists.");
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Could not start sign-up process.");
       }
-      console.log("Pretending to register and send OTP:", formData);
       setMode("verify-signup");
     } catch (err) {
-      setError(err.message || "Could not start sign-up process.");
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -256,10 +216,15 @@ export default function Login() {
     setIsLoading(true);
     setError("");
     try {
-      // In a real app, this would be a fetch call.
-      await new Promise(res => setTimeout(res, 1000));
-      if (formData.otp !== '123456') {
-          throw new Error("Invalid OTP code.");
+      const verifyRes = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, otp: formData.otp, purpose: 'signup' }),
+      });
+      
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) {
+        throw new Error(verifyData.message || "Failed to verify OTP.");
       }
 
       const result = await signIn("credentials", {
@@ -275,12 +240,12 @@ export default function Login() {
         router.push("/dashboard");
       }
     } catch (err) {
-      setError(err.message || "Failed to verify OTP.");
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   const getLoginFormHandler = () => {
     switch (authMethod) {
       case 'password':
@@ -294,18 +259,14 @@ export default function Login() {
     }
   }
 
-  // --- UI / JSX (ENHANCED) ---
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-slate-950">
-      {/* Animated Background Elements */}
       <div className="absolute inset-0 z-0 opacity-50">
           <div className="absolute -top-40 -left-40 w-80 h-80 bg-purple-600/50 rounded-full blur-3xl animate-[spin_20s_linear_infinite]" />
           <div className="absolute top-1/3 -right-40 w-96 h-96 bg-indigo-600/50 rounded-full blur-3xl animate-[spin_25s_linear_infinite_reverse]" />
           <div className="absolute -bottom-40 left-1/3 w-72 h-72 bg-pink-600/50 rounded-full blur-3xl animate-[spin_18s_linear_infinite]" />
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiPjxwYXRoIGQ9Ik0wIC41SDMybTAtMTBWMzJNMCAxNS41SDMybTAtMTBWMzIiLz48L3N2Zz4=')] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000,transparent_100%)]" />
       </div>
-
-      {/* Main Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -313,7 +274,6 @@ export default function Login() {
           transition={{ duration: 0.6 }}
           className="w-full max-w-md"
         >
-          {/* Logo/Branding */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center gap-2 mb-3">
               <div className="p-3 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl shadow-lg shadow-purple-600/30">
@@ -325,8 +285,6 @@ export default function Login() {
             </h1>
             <p className="text-slate-400 mt-2">AI-Powered Startup Analysis</p>
           </div>
-
-          {/* Auth Card */}
           <motion.div
             layout
             transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
@@ -334,10 +292,8 @@ export default function Login() {
           >
             <div className="absolute top-0 right-0 -m-4 w-32 h-32 bg-purple-600/10 rounded-full blur-2xl" />
             <div className="absolute bottom-0 left-0 -m-4 w-24 h-24 bg-indigo-600/10 rounded-full blur-2xl" />
-
             <div className="relative">
               <AnimatePresence mode="wait">
-                {/* LOGIN MODE */}
                 {mode === "login" && (
                   <motion.div
                     key="login"
@@ -350,7 +306,6 @@ export default function Login() {
                       <h2 className="text-3xl font-bold text-white">Welcome Back</h2>
                       <p className="text-slate-400 mt-1">Sign in to continue your journey</p>
                     </div>
-
                     <form onSubmit={getLoginFormHandler()} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="email" className="flex items-center gap-2 text-slate-300">
@@ -358,7 +313,6 @@ export default function Login() {
                         </Label>
                         <Input id="email" name="email" type="email" placeholder="your@email.com" required onChange={handleInputChange} />
                       </div>
-                      
                       <AnimatePresence>
                         {authMethod === 'password' && (
                           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{duration: 0.3}} className="space-y-2 overflow-hidden">
@@ -369,26 +323,21 @@ export default function Login() {
                           </motion.div>
                         )}
                       </AnimatePresence>
-
                       {authMethod === 'verify-login-otp' && (
                          <motion.div key="login-otp" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-2 pt-2">
-                            <Label htmlFor="otp" className="flex items-center justify-center gap-2 text-slate-300 text-center text-sm">
-                                Enter the OTP sent to your email
-                            </Label>
-                            <OtpInput length={6} onChange={handleOtpChange} />
+                           <Label htmlFor="otp" className="flex items-center justify-center gap-2 text-slate-300 text-center text-sm">
+                               Enter the OTP sent to your email
+                           </Label>
+                           <OtpInput length={6} onChange={handleOtpChange} />
                          </motion.div>
                       )}
-
                       {error && <p className="text-red-400 text-sm font-medium text-center bg-red-500/10 p-2 rounded-md border border-red-500/20">{error}</p>}
-
                       <Button type="submit" disabled={isLoading} className="w-full group gap-2" size="lg">
-                         {isLoading ? <LoaderCircle className="size-5 animate-spin"/> : <ShieldCheck className="size-5 group-hover:scale-110 transition-transform"/>}
-                         <span>{isLoading ? 'Loading...' : (authMethod === 'request-otp' ? 'Send OTP' : (authMethod === 'verify-login-otp' ? 'Verify & Sign In' : 'Sign In'))}</span>
+                        {isLoading ? <LoaderCircle className="size-5 animate-spin"/> : <ShieldCheck className="size-5 group-hover:scale-110 transition-transform"/>}
+                        <span>{isLoading ? 'Loading...' : (authMethod === 'request-otp' ? 'Send OTP' : (authMethod === 'verify-login-otp' ? 'Verify & Sign In' : 'Sign In'))}</span>
                       </Button>
                     </form>
-
                     <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800" /></div><div className="relative flex justify-center text-sm"><span className="px-4 bg-slate-900 text-slate-500">OR</span></div></div>
-                    
                     <div className="space-y-3">
                         <Button variant="outline" className="w-full gap-2 text-white" size="lg" onClick={() => setAuthMethod(authMethod === 'password' ? 'request-otp' : 'password')}>
                            <Zap className="size-5 text-purple-400" />
@@ -399,7 +348,6 @@ export default function Login() {
                           Sign in with Google
                         </Button>
                     </div>
-
                     <p className="mt-8 text-center text-sm text-slate-400">
                       New to StartupInspector?{" "}
                       <button onClick={() => { setMode("signup"); setError(''); setFormData({}); }} className="font-semibold text-purple-400 hover:text-purple-300 transition-colors underline-offset-4 hover:underline">
@@ -408,15 +356,12 @@ export default function Login() {
                     </p>
                   </motion.div>
                 )}
-
-                {/* SIGNUP MODE */}
                 {mode === "signup" && (
                   <motion.div key="signup" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
                     <div className="mb-6">
                       <h2 className="text-3xl font-bold text-white">Create Account</h2>
                       <p className="text-slate-400 mt-1">Start analyzing your startup ideas</p>
                     </div>
-                    
                     <form onSubmit={handleSignupOtpRequest} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -436,15 +381,12 @@ export default function Login() {
                         <Label htmlFor="password" className="flex items-center gap-2 text-slate-300"><Lock className="size-4 text-purple-400" />Password</Label>
                         <Input id="password" name="password" type="password" placeholder="min. 8 characters" required minLength={8} onChange={handleInputChange}/>
                       </div>
-                      
                       {error && <p className="text-red-400 text-sm font-medium text-center bg-red-500/10 p-2 rounded-md border border-red-500/20">{error}</p>}
-                      
                       <Button type="submit" disabled={isLoading} className="w-full group gap-2" size="lg">
                         {isLoading ? <LoaderCircle className="size-5 animate-spin"/> : <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform"/>}
                         <span>{isLoading ? 'Creating...' : 'Continue'}</span>
                       </Button>
                     </form>
-
                     <p className="mt-8 text-center text-sm text-slate-400">
                       Already have an account?{" "}
                       <button onClick={() => { setMode("login"); setError(''); setFormData({}); }} className="font-semibold text-purple-400 hover:text-purple-300 transition-colors underline-offset-4 hover:underline">
@@ -453,8 +395,6 @@ export default function Login() {
                     </p>
                   </motion.div>
                 )}
-
-                {/* VERIFY SIGNUP MODE */}
                 {mode === "verify-signup" && (
                   <motion.div
                     key="verify-signup"
@@ -481,15 +421,13 @@ export default function Login() {
                     </form>
                     <p className="mt-8 text-center text-sm text-slate-400">
                       Didn't get a code?{" "}
-                      <button onClick={() => handleSignupOtpRequest({ preventDefault: () => {} })} disabled={isLoading} className="font-semibold text-purple-400 hover:underline disabled:opacity-50">Resend</button>
+                      <button onClick={(e) => handleSignupOtpRequest(e)} disabled={isLoading} className="font-semibold text-purple-400 hover:underline disabled:opacity-50">Resend</button>
                     </p>
                   </motion.div>
                 )}
-
               </AnimatePresence>
             </div>
           </motion.div>
-          
           <p className="mt-8 text-center text-xs text-slate-500">
             &copy; {new Date().getFullYear()} StartupInspector. All rights reserved.
           </p>
@@ -498,4 +436,3 @@ export default function Login() {
     </div>
   );
 }
-

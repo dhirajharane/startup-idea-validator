@@ -2,8 +2,8 @@
 import { Download, Eye, Lightbulb } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
-export function RecentHistory({ reports, isLoading = false, onViewReport }) {
-  // Empty state
+export function RecentHistory({ reports = [], isLoading = false, onViewReport }) {
+  
   if (!isLoading && reports.length === 0) {
     return (
       <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-2xl p-8">
@@ -21,7 +21,6 @@ export function RecentHistory({ reports, isLoading = false, onViewReport }) {
     );
   }
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-2xl p-8">
@@ -65,7 +64,7 @@ export function RecentHistory({ reports, isLoading = false, onViewReport }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {reports.slice(0, 3).map((report) => (
+            {(Array.isArray(reports) ? reports : []).slice(0, 3).map((report) => (
               <TableRow 
                 key={report.id}
                 className="border-gray-800 hover:bg-gray-800/30 transition-colors group"

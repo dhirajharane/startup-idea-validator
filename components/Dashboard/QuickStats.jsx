@@ -2,20 +2,24 @@
 import { FileText, Download, Gem, Bookmark } from "lucide-react";
 import { useEffect, useState } from "react";
 
-function AnimatedCounter({ target }) {
+// 1. Add a default value to the target prop.
+function AnimatedCounter({ target = 0 }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const duration = 1000; // 1 second
+    // 2. Ensure target is a valid number before starting the animation.
+    const validTarget = typeof target === 'number' ? target : 0;
+    
+    const duration = 1000;
     const steps = 30;
-    const increment = target / steps;
+    const increment = validTarget / steps;
     const stepDuration = duration / steps;
 
     let currentStep = 0;
     const timer = setInterval(() => {
       currentStep++;
-      if (currentStep === steps) {
-        setCount(target);
+      if (currentStep >= steps) {
+        setCount(validTarget);
         clearInterval(timer);
       } else {
         setCount(Math.floor(increment * currentStep));
@@ -74,23 +78,19 @@ export function QuickStats({
               animation: `slideUp 0.6s ease-out ${index * 0.1}s both`,
             }}
           >
-            {/* Hover glow on top border */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
               style={{ backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))` }}
               className={`bg-gradient-to-r ${stat.color}`} 
             />
             
-            {/* Icon container */}
             <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br ${stat.color} bg-opacity-10 mb-4`}>
               <Icon className="w-6 h-6 text-white" strokeWidth={1.5} />
             </div>
 
-            {/* Metric */}
             <div className="mb-1 text-white" style={{ fontSize: "32px", fontWeight: 700 }}>
               <AnimatedCounter target={stat.metric} />
             </div>
 
-            {/* Label */}
             <div className="text-gray-400" style={{ fontSize: "14px", fontWeight: 500 }}>
               {stat.label}
             </div>

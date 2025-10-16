@@ -44,12 +44,14 @@ export function HistoryPage({ onNavigate }) {
                 }
                 const data = await response.json();
                 if (data.success) {
-                    setAllReports(data.data);
+                    // Ensure the data is an array before setting it
+                    setAllReports(Array.isArray(data.data) ? data.data : []);
                 } else {
                     throw new Error(data.error || 'Could not fetch reports.');
                 }
             } catch (err) {
                 setError(err.message);
+                setAllReports([]); // Reset to empty array on error
             } finally {
                 setIsLoading(false);
             }
@@ -66,8 +68,10 @@ export function HistoryPage({ onNavigate }) {
     const handleViewReport = (id) => {
         console.log("Viewing report:", id);
     };
-
-    const filteredReports = allReports.filter((report) =>
+    
+    // Defensively check if allReports is an array before filtering
+    const safeAllReports = Array.isArray(allReports) ? allReports : [];
+    const filteredReports = safeAllReports.filter((report) =>
         report.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 

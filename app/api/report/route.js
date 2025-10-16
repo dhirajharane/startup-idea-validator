@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import mongoose from 'mongoose';
-import dbConnect from '@/lib/dbConnect';
+import dbConnect from '@/lib/config/database';
 import User from '@/lib/models/User';
 import Report from '@/lib/models/Report';
 import { runIdeaValidatorChains } from '@/lib/chains';

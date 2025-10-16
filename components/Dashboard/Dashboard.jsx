@@ -1,55 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { ValidatorHub } from "./ValidatorHub";
 import { QuickStats } from "./QuickStats";
 import { RecentHistory } from "./RecentHistory";
 
-export function Dashboard({ onNavigate, onAnalysisStart, onAnalysisComplete, onAnalysisError }) {
+// 1. Remove all useEffect and data-fetching state. Accept props instead.
+export function Dashboard({ userDetails, reports, onNavigate, onAnalysisStart, onAnalysisComplete, onAnalysisError }) {
     const [activePage, setActivePage] = useState("dashboard");
-    const [userDetails, setUserDetails] = useState(null);
-    const [reports, setReports] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const [detailsRes, reportsRes] = await Promise.all([
-                    fetch('/api/user-details'),
-                    fetch('/api/user-reports')
-                ]);
-
-                if (!detailsRes.ok || !reportsRes.ok) {
-                    throw new Error('Failed to fetch dashboard data.');
-                }
-
-                const detailsData = await detailsRes.json();
-                const reportsData = await reportsRes.json();
-
-                if (detailsData.success) {
-                    setUserDetails(detailsData.data);
-                } else {
-                    throw new Error(detailsData.error || 'Could not fetch user details.');
-                }
-
-                if (reportsData.success) {
-                    setReports(reportsData.data);
-                } else {
-                    throw new Error(reportsData.error || 'Could not fetch user reports.');
-                }
-
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
 
     const handleNavigate = (page) => {
         setActivePage(page);
@@ -60,21 +18,8 @@ export function Dashboard({ onNavigate, onAnalysisStart, onAnalysisComplete, onA
         console.log("Viewing report:", id);
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
-                <p>Loading Dashboard...</p>
-            </div>
-        );
-    }
-    
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center text-red-500">
-                <p>Error: {error}</p>
-            </div>
-        );
-    }
+    // The loading and error states are now handled by Next.js's loading.js/error.js files
+    // and the parent server component.
 
     return (
         <div className="min-h-screen bg-gray-950">
@@ -86,6 +31,7 @@ export function Dashboard({ onNavigate, onAnalysisStart, onAnalysisComplete, onA
                         className="opacity-0"
                         style={{ animation: "slideUp 0.6s ease-out 0.1s both" }}
                     >
+                        {/* 2. Pass the props directly to ValidatorHub */}
                         <ValidatorHub
                             firstName={userDetails?.firstName}
                             creditsLeft={userDetails?.creditsLeft}
