@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import User from "@/lib/models/user.model";
+import User from "@/lib/models/User";
 import dbConnect from "@/lib/config/database";
 import { verifyOTP } from "@/lib/otp";
 
