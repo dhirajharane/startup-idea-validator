@@ -8,7 +8,6 @@
     <a href="#key-features"><strong>Key Features</strong></a> ·
     <a href="#tech-stack"><strong>Tech Stack</strong></a> ·
     <a href="#getting-started"><strong>Getting Started</strong></a> ·
-    <a href="#screenshots"><strong>Screenshots</strong></a>
   </p>
   <br>
 </div>
