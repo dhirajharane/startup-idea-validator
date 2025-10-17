@@ -1,4 +1,19 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('chrome-aws-lambda');
+    }
+    return config;
+  },
+};
 
 export default nextConfig;
+
+
+
+
+// /** @type {import('next').NextConfig} */
+// const nextConfig = {};
+
+// export default nextConfig;
