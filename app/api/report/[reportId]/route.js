@@ -4,6 +4,8 @@ import Report from '@/lib/models/Report';
 import { auth } from "@/lib/auth";
 import mongoose from 'mongoose';
 
+export const runtime = "nodejs";
+
 export async function GET(req, { params }) {
     const { reportId } = await params;
 

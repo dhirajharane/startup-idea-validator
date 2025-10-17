@@ -4,6 +4,8 @@ import User from '@/lib/models/User';
 import Report from '@/lib/models/Report';
 import { auth } from "@/lib/auth";
 
+export const runtime = "nodejs";
+
 async function getUserIdFromRequest(req) {
     const session = await auth();
     if (!session || !session.user || !session.user.id) {

@@ -3,6 +3,8 @@ import User from "@/lib/models/User";
 import dbConnect from "@/lib/config/database";
 import crypto from "crypto";
 
+export const runtime = "nodejs";
+
 export async function POST(req) {
   try {
     await dbConnect();

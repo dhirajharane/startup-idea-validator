@@ -3,6 +3,8 @@ import dbConnect from '@/lib/config/database';
 import User from '@/lib/models/User';
 import mongoose from 'mongoose';
 
+export const runtime = "nodejs";
+
 async function getUserIdFromRequest(req) {
     const user = await User.findOne().lean();
     return user ? user._id : null;

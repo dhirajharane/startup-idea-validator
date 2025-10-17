@@ -3,6 +3,8 @@ import dbConnect from '@/lib/config/database';
 import User from '@/lib/models/User';
 import Report from '@/lib/models/Report';
 
+export const runtime = "nodejs";
+
 
 async function getUserIdFromRequest(req) {
     const user = await User.findOne().lean();

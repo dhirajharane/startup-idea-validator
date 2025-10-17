@@ -4,6 +4,8 @@ import dbConnect from "@/lib/config/database";
 import { createOTP } from "@/lib/otp";
 import { sendOTPEmail } from "@/lib/mailer";
 
+export const runtime = "nodejs";
+
 export async function POST(req) {
   try {
     await dbConnect();

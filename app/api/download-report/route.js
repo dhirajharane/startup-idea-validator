@@ -6,6 +6,8 @@ import { generatePDF } from "@/lib/utils/generatePDF";
 import User from "@/lib/models/User"; // Import your User model
 import dbConnect from "@/lib/config/database"; // Import your DB connection utility
 
+export const runtime = "nodejs";
+
 const validationSchema = z.object({
   htmlContent: z.string().min(1, { message: "HTML content is required." }),
   cssContent: z.string().min(1, { message: "CSS content is required." }),

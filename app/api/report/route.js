@@ -7,6 +7,8 @@ import Report from '@/lib/models/Report';
 import { runIdeaValidatorChains } from '@/lib/chains';
 import { structuredOutputSchema } from '@/lib/utils/structuredOutputSchema';
 
+export const runtime = "nodejs";
+
 const validationSchema = z.object({
     startupIdea: z
         .string({ invalid_type_error: "Startup idea must be a string." })
