@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth";
 export const runtime = "nodejs";
 
 async function getUserIdFromRequest(req) {
-    const session = await auth();
+    const session = await auth(req);
     if (!session || !session.user || !session.user.id) {
         return null;
     }
