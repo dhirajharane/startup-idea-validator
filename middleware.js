@@ -1,4 +1,3 @@
-import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 
 export const config = {
@@ -6,26 +5,24 @@ export const config = {
 };
 
 export async function middleware(req) {
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET,
-    // NextAuth stores JWT in cookies
-  });
-
   const url = req.nextUrl.clone();
 
-  // If user is not logged in, redirect to login
-  if (!token) {
+  // Check for NextAuth session cookie
+  const sessionCookie =
+    req.cookies.get("__Secure-next-auth.session-token") || 
+    req.cookies.get("next-auth.session-token");
+
+  // If no cookie, redirect to login
+  if (!sessionCookie) {
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // If user is logged in and visits /login, redirect to dashboard
-  if (token && req.nextUrl.pathname === "/login") {
+  // If user is logged in and visits login page, redirect to dashboard
+  if (sessionCookie && req.nextUrl.pathname === "/login") {
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
-  // All other requests pass
   return NextResponse.next();
 }
