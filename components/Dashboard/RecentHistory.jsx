@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Download, Eye, Lightbulb } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Toaster, toast } from 'sonner';
 
 const ScoreBadge = ({ score }) => {
     let colorClass = "bg-gray-500";
@@ -25,45 +26,7 @@ export function RecentHistory({ reports = [], isLoading = false, onViewReport })
     const [downloadingId, setDownloadingId] = useState(null);
 
     const handleDownload = async (reportId) => {
-      setDownloadingId(reportId);
-      try {
-        const res = await fetch(`/api/report/${reportId}`);
-        const reportData = await res.json();
-
-        if (!reportData.success) throw new Error('Failed to fetch report data');
-
-        const { startupIdea } = reportData.data;
-
-        // This is a simplified approach. In a real app, you would generate
-        // the HTML on the server or have a dedicated download page.
-        const response = await fetch('/api/download-report', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              htmlContent: `<h1>Report for ${startupIdea}</h1><p>Details...</p>`, 
-              cssContent: 'body { font-family: sans-serif; }'
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to generate PDF on the server.');
-        }
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${startupIdea.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-
-      } catch (error) {
-        console.error("Download failed:", error);
-      } finally {
-        setDownloadingId(null);
-      }
+        toast.info("Buy Premium to download the report");
     };
   
     if (isLoading) {

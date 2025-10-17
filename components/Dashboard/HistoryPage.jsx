@@ -5,6 +5,7 @@ import { Search, Download, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Input } from "../ui/input";
+import { Toaster, toast } from 'sonner';
 
 const ScoreBadge = ({ score }) => {
     let colorClass = "bg-gray-500";
@@ -65,7 +66,7 @@ export function HistoryPage({ onNavigate, onViewReport }) {
     };
 
     const handleDownload = async (reportId) => {
-      // Logic for downloading, similar to RecentHistory
+        toast.info("Buy Premium to download the report");
     };
     
     const safeAllReports = Array.isArray(allReports) ? allReports : [];
@@ -77,9 +78,9 @@ export function HistoryPage({ onNavigate, onViewReport }) {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedReports = filteredReports.slice(startIndex, startIndex + itemsPerPage);
 
-    if (isLoading) {
-        return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white"><p>Loading History...</p></div>;
-    }
+    // if (isLoading) {
+    //     return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white"><p>Loading History...</p></div>;
+    // }
     
     if (error) {
         return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-red-500"><p>Error: {error}</p></div>;
