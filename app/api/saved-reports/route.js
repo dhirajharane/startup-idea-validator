@@ -6,23 +6,15 @@ import { auth } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-async function getUserIdFromRequest(req) {
-    const session = await auth(req);
-    if (!session || !session.user || !session.user.id) {
-        return null;
-    }
-    return session.user.id;
-}
-
 export async function GET(req) {
     await dbConnect();
 
     try {
-        const userId = await getUserIdFromRequest(req);
-
-        if (!userId) {
+        const session = await auth();
+        if (!session || !session.user || !session.user.id) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
+        const userId = session.user.id;
 
         const userWithSavedReports = await User.findById(userId)
             .populate({
@@ -63,11 +55,11 @@ export async function POST(req) {
     await dbConnect();
 
     try {
-        const userId = await getUserIdFromRequest(req);
-
-        if (!userId) {
+        const session = await auth();
+        if (!session || !session.user || !session.user.id) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
+        const userId = session.user.id;
 
         const { reportId } = await req.json();
 
