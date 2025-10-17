@@ -4,11 +4,12 @@ import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { ArrowRight, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function CTASection() {
+  const router = useRouter();
   const [particles, setParticles] = useState([]);
 
-  // Generate particle positions only on client
   useEffect(() => {
     const newParticles = [...Array(20)].map(() => ({
       top: `${Math.random() * 100}%`,
@@ -28,10 +29,8 @@ export function CTASection() {
 
   return (
     <section className="py-24 relative overflow-hidden">
-      {/* Gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-600" />
       
-      {/* Animated background patterns */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-full h-full">
           {particles.map((pos, i) => (
@@ -79,7 +78,7 @@ export function CTASection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
               size="lg"
-              onClick={() => scrollToSection("#demo")}
+              onClick={() => router.push('/login')}
               className="group bg-white text-indigo-600 hover:bg-gray-50 px-8 py-6 rounded-full transition-all duration-300 shadow-2xl hover:shadow-white/20 hover:scale-105"
             >
               <span className="flex items-center gap-2">

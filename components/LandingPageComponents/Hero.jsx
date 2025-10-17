@@ -2,8 +2,10 @@
 import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { ArrowRight, Sparkles, Play } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function Hero() {
+  const router = useRouter();
   const scrollToSection = (href) => {
     const element = document.querySelector(href);
     if (element) {
@@ -16,7 +18,6 @@ export function Hero() {
       id="home"
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950"
     >
-      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
           className="absolute top-20 left-10 w-96 h-96 bg-indigo-600/20 rounded-full filter blur-3xl"
@@ -59,10 +60,8 @@ export function Hero() {
         />
       </div>
 
-      {/* Grid pattern overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:72px_72px]" />
 
-      {/* Content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-32 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -106,7 +105,7 @@ export function Hero() {
         >
           <Button
             size="lg"
-            onClick={() => scrollToSection("#demo")}
+            onClick={() => router.push('/login')}
             className="group relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-6 rounded-full transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105"
           >
             <span className="relative z-10 flex items-center gap-2">

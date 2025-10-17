@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import { Toaster, toast } from 'sonner'
 
 
-export function ReportPage({ report, onNavigate }) {
+export function ReportPage({ report, onNavigate, onReportSaved, onReportDownloaded }) {
     const [activePage, setActivePage] = useState("report");
     const [isDownloading, setIsDownloading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -91,6 +91,7 @@ export function ReportPage({ report, onNavigate }) {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
+            if (onReportDownloaded) onReportDownloaded();
 
         } catch (error) {
             console.error("Download failed:", error);
@@ -113,7 +114,7 @@ export function ReportPage({ report, onNavigate }) {
             if (!response.ok) {
                 throw new Error(result.error || 'Something went wrong.');
             }
-
+            if (onReportSaved) onReportSaved();
             toast.success("Report saved successfully!");
 
         } catch (error) {

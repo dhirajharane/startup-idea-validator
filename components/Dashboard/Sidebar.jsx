@@ -1,6 +1,7 @@
 "use client";
 import { LayoutDashboard, History, LogOut, Bookmark } from "lucide-react";
 import { useState } from "react";
+import { handleSignOut } from "@/app/actions/auth";
 
 export function Sidebar({ activePage, onNavigate }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -18,7 +19,6 @@ export function Sidebar({ activePage, onNavigate }) {
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >
-      {/* Logo Area */}
       <div className="h-16 flex items-center px-5 border-b border-gray-800">
         <div className="relative w-8 h-8 flex-shrink-0">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg blur-sm opacity-75" />
@@ -33,7 +33,6 @@ export function Sidebar({ activePage, onNavigate }) {
         )}
       </div>
 
-      {/* Navigation Items */}
       <nav className="flex flex-col justify-between h-[calc(100vh-64px)] py-6">
         <div className="space-y-2 px-3">
           {navItems.map((item) => {
@@ -53,7 +52,6 @@ export function Sidebar({ activePage, onNavigate }) {
                   relative overflow-hidden
                 `}
               >
-                {/* Active indicator */}
                 {isActive && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-400 to-purple-400 rounded-r-full animate-pulse" />
                 )}
@@ -70,20 +68,22 @@ export function Sidebar({ activePage, onNavigate }) {
           })}
         </div>
 
-        {/* Separator & Logout */}
         <div className="px-3 space-y-2">
           <div className="h-px bg-gray-800 mb-4" />
           
-          <button
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 hover:text-red-400 hover:bg-gray-800/50 transition-all duration-200"
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" strokeWidth={1.5} />
-            {isExpanded && (
-              <span className="whitespace-nowrap overflow-hidden" style={{ fontSize: "14px", fontWeight: 500 }}>
-                Log Out
-              </span>
-            )}
-          </button>
+          <form action={handleSignOut}>
+            <button
+              type="submit"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-gray-400 hover:text-red-400 hover:bg-gray-800/50 transition-all duration-200"
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0" strokeWidth={1.5} />
+              {isExpanded && (
+                <span className="whitespace-nowrap overflow-hidden" style={{ fontSize: "14px", fontWeight: 500 }}>
+                  Log Out
+                </span>
+              )}
+            </button>
+          </form>
         </div>
       </nav>
     </div>

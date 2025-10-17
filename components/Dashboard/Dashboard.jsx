@@ -5,21 +5,13 @@ import { ValidatorHub } from "./ValidatorHub";
 import { QuickStats } from "./QuickStats";
 import { RecentHistory } from "./RecentHistory";
 
-// 1. Remove all useEffect and data-fetching state. Accept props instead.
-export function Dashboard({ userDetails, reports, onNavigate, onAnalysisStart, onAnalysisComplete, onAnalysisError }) {
+export function Dashboard({ userDetails, reports, onNavigate, onAnalysisStart, onAnalysisComplete, onAnalysisError, onViewReport }) {
     const [activePage, setActivePage] = useState("dashboard");
 
     const handleNavigate = (page) => {
         setActivePage(page);
         onNavigate(page);
     };
-
-    const handleViewReport = (id) => {
-        console.log("Viewing report:", id);
-    };
-
-    // The loading and error states are now handled by Next.js's loading.js/error.js files
-    // and the parent server component.
 
     return (
         <div className="min-h-screen bg-gray-950">
@@ -31,7 +23,6 @@ export function Dashboard({ userDetails, reports, onNavigate, onAnalysisStart, o
                         className="opacity-0"
                         style={{ animation: "slideUp 0.6s ease-out 0.1s both" }}
                     >
-                        {/* 2. Pass the props directly to ValidatorHub */}
                         <ValidatorHub
                             firstName={userDetails?.firstName}
                             creditsLeft={userDetails?.creditsLeft}
@@ -60,7 +51,7 @@ export function Dashboard({ userDetails, reports, onNavigate, onAnalysisStart, o
                     >
                         <RecentHistory
                             reports={reports}
-                            onViewReport={handleViewReport}
+                            onViewReport={onViewReport}
                         />
                     </div>
                 </div>

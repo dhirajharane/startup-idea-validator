@@ -69,7 +69,12 @@ export async function POST(req) {
         
         await session.endSession();
 
-        return NextResponse.json({ success: true, data: validatedReport });
+        const result = {
+          ...validatedReport,
+          id: newReport._id.toString()
+        };
+
+        return NextResponse.json({ success: true, data: result });
 
     } catch (error) {
         if (session.inTransaction()) {
@@ -83,10 +88,13 @@ export async function POST(req) {
             return NextResponse.json({ success: false, error: "Generated report data is invalid." }, { status: 500 });
         }
 
+        if (error.name === 'ValidationError') {
+            return NextResponse.json({ success: false, error: `Validation Error: ${error.message}` }, { status: 500 });
+        }
+
         return NextResponse.json(
             { success: false, error: "An internal server error occurred." },
             { status: 500 }
         );
     }
 }
-

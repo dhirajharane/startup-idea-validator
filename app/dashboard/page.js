@@ -10,7 +10,7 @@ async function getUserDashboardData(userId) {
 
   const [user, reports] = await Promise.all([
     User.findById(userId).lean(),
-    Report.find({ user: userId }).sort({ createdAt: -1 }).limit(5).lean(),
+    Report.find({ userId: userId }).sort({ createdAt: -1 }).limit(3).lean(),
   ]);
 
   if (!user) {
@@ -22,12 +22,15 @@ async function getUserDashboardData(userId) {
       id: user._id.toString(),
       firstName: user.firstName,
       creditsLeft: user.creditsLeft,
-      analyzedIdeas: user.reportsHistory.length,
+      analyzedIdeas: user.reportsHistory?.length || 0,
+      savedReports: user.savedReports?.length || 0,
+      downloadedReports: user.downloads || 0,
     },
     reports: reports.map((report) => ({
       id: report._id.toString(),
-      name: report.startupName,
+      name: report.startupIdea,
       date: new Date(report.createdAt).toLocaleDateString(),
+      score: report.score,
     })),
   };
 }
