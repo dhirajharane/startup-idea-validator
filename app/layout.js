@@ -8,7 +8,7 @@ const outfit = Outfit({
 });
 
 export const metadata = {
-  title: "StartUp Inspectoor",
+  title: "StartUpInspector",
   description: "An AI-powered tool to generate comprehensive startup reports.",
 };
 
