@@ -12,12 +12,11 @@ import { CompetitiveLandscape } from "./CompetitiveLandscape";
 import { MarketTrends } from "./MarketTrends";
 import { Button } from "../ui/button";
 import { motion } from "framer-motion";
-import { Toaster, toast } from 'sonner'
-
+import { Toaster, toast } from 'sonner';
 
 export function ReportPage({ report, onNavigate, onReportSaved, onReportDownloaded }) {
     const [activePage, setActivePage] = useState("report");
-    const [isDownloading, setIsDownloading] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false); // Kept for potential future use
     const [isSaving, setIsSaving] = useState(false);
     const reportContainerRef = useRef(null);
 
@@ -34,71 +33,12 @@ export function ReportPage({ report, onNavigate, onReportSaved, onReportDownload
         if (onNavigate) onNavigate(page);
     };
 
-    const handleDownload = async () => {
-        setIsDownloading(true);
-        if (!reportContainerRef.current) {
-            console.error("Report container not found.");
-            setIsDownloading(false);
-            return;
-        }
-
-        try {
-            const styleSheets = Array.from(document.styleSheets);
-            let cssContent = "";
-
-            for (const sheet of styleSheets) {
-                try {
-                    if (sheet.cssRules) {
-                        cssContent += Array.from(sheet.cssRules)
-                            .map((rule) => rule.cssText)
-                            .join("\n");
-                    } else if (sheet.href) {
-                        const res = await fetch(sheet.href);
-                        if (res.ok) {
-                            const text = await res.text();
-                            cssContent += text;
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Could not read stylesheet:", e);
-                }
-            }
-
-            const htmlContent = reportContainerRef.current.innerHTML;
-
-            const response = await fetch('/api/download-report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ htmlContent, cssContent }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to generate PDF on the server.');
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-
-            
-            const fileName = (report?.startupIdea || 'startup_report')
-              .replace(/[^a-z0-9]/gi, '_')
-              .toLowerCase();
-            a.download = `${fileName}.pdf`;
-            
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            if (onReportDownloaded) onReportDownloaded();
-
-        } catch (error) {
-            console.error("Download failed:", error);
-        } finally {
-            setIsDownloading(false);
-        }
+    // --- MODIFIED CODE ---
+    // The download logic is replaced with a toast notification.
+    const handleDownload = () => {
+        toast.info("Buy Premium to download the report");
     };
+    // --- END OF MODIFICATION ---
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -127,7 +67,7 @@ export function ReportPage({ report, onNavigate, onReportSaved, onReportDownload
 
     return (
         <div className="min-h-screen bg-gray-950">
-            <Toaster />
+            <Toaster richColors position="top-center" />
             <Sidebar activePage={activePage} onNavigate={handleNavigate} />
 
             <div className="ml-[72px] transition-all duration-300">
@@ -152,7 +92,7 @@ export function ReportPage({ report, onNavigate, onReportSaved, onReportDownload
                         <div className="flex gap-3 print-hidden">
                             <Button
                                 onClick={handleDownload}
-                                disabled={isDownloading}
+                                disabled={isDownloading} // This can be removed if you no longer need the disabled state
                                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl shadow-lg shadow-indigo-500/20"
                             >
                                 <Download className="w-4 h-4 mr-2" strokeWidth={2} />
