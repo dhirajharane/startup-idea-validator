@@ -180,7 +180,7 @@ export function ReportPage({ report, onNavigate, onReportSaved, onReportDownload
                         </motion.section>
 
                         <section>
-                           <CoreFindings summary={report.summary} conclusion={report.conclusion} />
+                           <CoreFindings summary={report.summary} />
                         </section>
 
                         <section>
@@ -209,6 +209,10 @@ export function ReportPage({ report, onNavigate, onReportSaved, onReportDownload
                                 trendSummary={report.marketTrends.trendSummary}
                                 trends={report.marketTrends.trends}
                             />
+                        </section>
+                        
+                        <section>
+                            <CoreFindings conclusion={report.conclusion} />
                         </section>
                     </div>
 
