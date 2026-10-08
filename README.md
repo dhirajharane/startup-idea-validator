@@ -33,7 +33,7 @@ Experience the power of StartUpInspector firsthand.
   - **💡 Actionable Insights:** Concrete steps to improve and refine your idea.
   - **📋 Pitch Deck Outline:** A structured outline to help you create a compelling pitch deck.
   - **💯 Success Score:** A unique score to quickly gauge the potential of your idea.
-- **🔐 Secure Authentication:** Robust user authentication system with email/password and OTP-based login.
+- **🔐 Secure Authentication:** Robust email/password authentication.
 - **🖥️ Intuitive Dashboard:** A sleek and modern dashboard to manage your analyses, view your history, and track your credits.
 - **📄 PDF Export:** Download your detailed reports as a professional PDF.
 - **⭐ Save Reports:** Bookmark and save your most promising reports for future reference.
@@ -87,12 +87,6 @@ Experience the power of StartUpInspector firsthand.
     # SerpAPI for web scraping
     SERP_API_KEY=your_serpapi_key
 
-    # Email (for OTP)
-    EMAIL_SERVER_HOST=your_email_server_host
-    EMAIL_SERVER_PORT=your_email_server_port
-    EMAIL_SERVER_USER=your_email_server_user
-    EMAIL_SERVER_PASSWORD=your_email_server_password
-    EMAIL_FROM=your_email_from_address
     ```
 
 4.  **Run the development server:**

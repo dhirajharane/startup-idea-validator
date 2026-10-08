@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import User from "@/lib/models/User";
 import dbConnect from "@/lib/config/database";
-import { createOTP, normalizeEmail } from "@/lib/otp";
-import { sendOTPEmail } from "@/lib/mailer";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
   try {
     await dbConnect();
-    const { firstName, lastName, password, email: rawEmail } = await req.json();
-    const email = normalizeEmail(rawEmail);
+    const { firstName, lastName, email: rawEmail, password } = await req.json();
+    const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
 
     if (!firstName || !lastName || !email || !password) {
       return NextResponse.json(
@@ -21,39 +19,19 @@ export async function POST(req) {
 
     const existingUser = await User.findOne({ email });
 
-    if (existingUser && existingUser.isVerified) {
+    if (existingUser) {
       return NextResponse.json(
         { message: "An account with this email already exists." },
         { status: 409 }
       );
     }
 
-    const { otp, expires } = createOTP();
-
-    let user = existingUser;
-    if (user && !user.isVerified) {
-      user.firstName = firstName;
-      user.lastName = lastName;
-      user.password = password;
-      user.otp = otp.toString();
-      user.otpExpires = expires;
-    } else {
-      user = new User({
-        firstName,
-        lastName,
-        email,
-        password,
-        isVerified: false,
-        otp: otp.toString(),
-        otpExpires: expires,
-      });
-    }
+    const user = new User({ firstName, lastName, email, password });
 
     await user.save();
-    await sendOTPEmail(email, otp.toString());
 
     return NextResponse.json(
-      { message: "OTP sent to your email for verification." },
+      { message: "Account created successfully." },
       { status: 200 }
     );
   } catch (error) {
