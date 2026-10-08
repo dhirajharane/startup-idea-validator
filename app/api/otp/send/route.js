@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import User from "@/lib/models/User";
 import dbConnect from "@/lib/config/database";
-import { createOTP } from "@/lib/otp";
+import { createOTP, normalizeEmail } from "@/lib/otp";
 import { sendOTPEmail } from "@/lib/mailer";
 
 export const runtime = "nodejs";
@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export async function POST(req) {
   try {
     await dbConnect();
-    const { email } = await req.json();
+    const email = normalizeEmail((await req.json()).email);
 
     const user = await User.findOne({ email });
     if (!user) {

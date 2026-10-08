@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import User from "@/lib/models/User";
 import dbConnect from "@/lib/config/database";
-import { verifyOTP } from "@/lib/otp";
+import { normalizeEmail, verifyOTP } from "@/lib/otp";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
   try {
     await dbConnect();
-    const { email, otp } = await req.json();
+    const { email: rawEmail, otp } = await req.json();
+    const email = normalizeEmail(rawEmail);
 
     const user = await User.findOne({ email }).select("+otp +otpExpires");
 

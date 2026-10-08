@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import User from "@/lib/models/User";
 import dbConnect from "@/lib/config/database";
 import crypto from "crypto";
+import { normalizeEmail, verifyOTP } from "@/lib/otp";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
   try {
     await dbConnect();
-    const { email, otp, purpose } = await req.json();
+    const { otp, purpose, email: rawEmail } = await req.json();
+    const email = normalizeEmail(rawEmail);
 
     if (!email || !otp || !purpose) {
       return NextResponse.json({ message: "Missing required fields." }, { status: 400 });
@@ -16,16 +18,10 @@ export async function POST(req) {
 
     const user = await User.findOne({ email }).select("+otp +otpExpires +loginToken +loginTokenExpires");
 
-    if (!user || !user.otp || new Date() > user.otpExpires) {
+    if (!user || !user.otp || !verifyOTP(otp, user.otp, user.otpExpires)) {
       return NextResponse.json({ message: "Invalid or expired OTP." }, { status: 400 });
     }
     
-    const isMatch = user.otp === otp;
-
-    if (!isMatch) {
-      return NextResponse.json({ message: "Invalid OTP provided." }, { status: 400 });
-    }
-
     user.otp = undefined;
     user.otpExpires = undefined;
 
