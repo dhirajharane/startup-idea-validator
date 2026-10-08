@@ -84,10 +84,18 @@ export async function POST(req) {
         }
         await session.endSession();
 
-        console.error("Error in /api/report:", error);
+        console.error("Error in /api/report:", {
+            name: error.name,
+            message: error.message,
+            cause: error.cause?.message,
+            stack: error.stack,
+        });
         
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, error: "Generated report data is invalid." }, { status: 500 });
+            return NextResponse.json(
+                { success: false, error: `Generated report data is invalid: ${error.message}` },
+                { status: 500 }
+            );
         }
 
         if (error.name === 'ValidationError') {
@@ -95,7 +103,7 @@ export async function POST(req) {
         }
 
         return NextResponse.json(
-            { success: false, error: "An internal server error occurred." },
+            { success: false, error: `Report generation failed: ${error.message}` },
             { status: 500 }
         );
     }
